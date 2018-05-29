@@ -1,0 +1,17 @@
+{
+    "history": [],
+    "passwords": {
+        "windows": {
+            "name": "windows",
+            "username": "Bene",
+            "password": "abcPWD"
+        },
+        "internet": {
+            "twitter": {
+                "name": "twitter",
+                "username": "hanspeter",
+                "password": "twitterPWD"
+            }
+        }
+    }
+}
