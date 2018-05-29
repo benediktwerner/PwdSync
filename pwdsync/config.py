@@ -11,7 +11,8 @@ CONFIG_DEFAULTS = {
     "lock_timeout": 60,
     "clipboard_timeout": 30,
     "password_show_time": 5,
-    "test": False
+    "test": False,
+    "show_tracebacks": False
 }
 
 

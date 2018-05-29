@@ -1,8 +1,8 @@
 import base64
 import hashlib
 
-import Crypto.Random
-from Crypto.Cipher import AES
+import Cryptodome.Random
+from Cryptodome.Cipher import AES
 
 from pwdsync.exceptions import WrongPasswordException
 
@@ -39,9 +39,9 @@ def unpad(text):
 
 def encrypt(text, pwd):
     text = DATA_PREFIX + text
-    salt = Crypto.Random.get_random_bytes(SALT_SIZE)
+    salt = Cryptodome.Random.get_random_bytes(SALT_SIZE)
     cipher = AES.new(gen_key(pwd, salt), AES.MODE_ECB)
-    ciphertext = cipher.encrypt(pad(text))
+    ciphertext = cipher.encrypt(pad(text).encode())
     return base64.b64encode(salt + ciphertext).decode()
 
 

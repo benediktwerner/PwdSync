@@ -1,19 +1,11 @@
 import json
 import os
 import sys
-from threading import Timer
 
 import pwdsync.crypto as crypto
 import pwdsync.exceptions as exceptions
-import pwdsync.terminal as terminal
 import pwdsync.utils as utils
 from pwdsync.config import config
-
-try:
-    import pyperclip
-    HAS_PYPERCLIP = True
-except ImportError:
-    HAS_PYPERCLIP = False
 
 
 def load_encrypted_data():
@@ -61,11 +53,6 @@ class Password:
         return "{}\t\t{}".format(self.name, self.username)
 
 
-def clear_clipboard(pwd_hash=None):
-    if pwd_hash is None or crypto.sha256(pyperclip.pase()) == pwd_hash:
-        pyperclip.copy("")
-
-
 class Storage:
     def __init__(self):
         self.pwd = None
@@ -99,18 +86,6 @@ class Storage:
         if isinstance(pwd, Password):
             return pwd
         return None
-
-    def to_clipboard(self, *pwd):
-        if not HAS_PYPERCLIP:
-            raise exceptions.NoClipboardException()
-
-        password = self.get_pwd(*pwd)
-        if password is None:
-            raise KeyError("No such password: " + "/".join(pwd))
-
-        password = password.password
-        pyperclip.copy(pwd)
-        Timer(config.clipboard_timeout, clear_clipboard, [crypto.sha256(pwd)]).start()
 
     def get_pwds(self, *categories):
         pwds = self.data["passwords"]

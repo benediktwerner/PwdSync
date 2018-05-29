@@ -1,10 +1,13 @@
+import colorama
 import re
 import select
 import sys
 import time
 from getpass import getpass
 
+import pwdsync.utils as utils
 from pwdsync.config import config
+
 
 ASK_INDENTATION = 1
 RESPONSE_INDENTATION = 3
@@ -69,27 +72,34 @@ def ascii_art():
 
 
 def erase_lines(count=1):
-        print("\r\b" * (count-1) + "\33[2K\r", end="")
+    print("\r\033[1A\033[2K" * (count - 1) + "\033[2K\r", end="")
 
 
 def goodbye():
-    respond("Goodbye!", "yellow")
+    respond("Goodbye!\n", "yellow")
     exit(0)
 
 
 def ask(text):
     try:
-        return input(" " * ASK_INDENTATION + colorize("{blue}" + text.strip() + " {yellow}"))
-    except (EOFError, KeyboardInterrupt):
-        print()
-        goodbye()
-    finally:
+        # color codes don't work with input on windows
+        print(" " * ASK_INDENTATION + colorize("{blue}" + text.strip() + " {yellow}"), end="", flush=True)
+        tmp = input()
         print(colorize("{endc}"), end="")
+        return tmp
+    except (EOFError, KeyboardInterrupt):
+        try:
+            print(colorize("{endc}\n"))
+            goodbye()
+        except KeyboardInterrupt:
+            goodbye()
 
 
 def ask_pwd(text="Enter password:"):
     try:
-        pwd = getpass(" " * RESPONSE_INDENTATION + colorize("{orange}" + text.strip() + " {yellow}"))
+        # color codes don't work with input on windows
+        print(" " * RESPONSE_INDENTATION + colorize("{orange}" + text.strip() + " {yellow}"), end="", flush=True)
+        pwd = getpass("")
         erase_lines(2)
         print(colorize("{endc}"), end="")
         return pwd
@@ -110,7 +120,7 @@ def success(text):
     respond(text, "green")
 
 
-def respond(text, color=None, highlight_color="blue"):
+def respond(text, color="white", highlight_color="blue"):
     text = highlightify(text, highlight_color, color)
     text = colorize(text, color)
     print(" " * RESPONSE_INDENTATION + text)
@@ -118,8 +128,15 @@ def respond(text, color=None, highlight_color="blue"):
 
 def flash(text):
     print(" " * RESPONSE_INDENTATION + text, end="", flush=True)
-    i, *_ = select.select([sys.stdin], [], [], config.password_show_time)
-    if i:
+    if utils.is_windows():
         input()
         erase_lines(2)
-    erase_lines()
+    else:
+        i, *_ = select.select([sys.stdin], [], [], config.password_show_time)
+        if i:
+            input()
+            erase_lines(2)
+        erase_lines()
+
+
+colorama.init()

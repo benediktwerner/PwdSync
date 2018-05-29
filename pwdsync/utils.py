@@ -12,16 +12,25 @@ def get_os():
 
 
 @cached
+def is_windows():
+    return get_os() == "Windows"
+
+
+@cached
+def is_linux():
+    return get_os() == "Linux"
+
+
+@cached
 def get_user_home():
     return os.path.expanduser("~")
 
 
 @cached
 def get_pwdsync_dir():
-    os_name = get_os()
-    if os_name == "Windows":
+    if is_windows():
         path = os.path.join(get_user_home(), "Documents", "pwdsync")
-    elif os_name == "Linux":
+    elif is_linux():
         path = os.path.join(get_user_home(), ".pwdsync")
     else:
         raise exceptions.UnsupportedOSException()
