@@ -5,7 +5,8 @@ Simple Password Manager with a cross platform command line interface and a UI fo
 PwdSync can be configured using the config file located at `~/.pwdsync/config.yml` on Linux or `%HOMEPATH%\Documents\pwdsync\config.yml` on Windows.
 
 ## Storage format
-```json
+After decryption the file has this format:
+```
 {
     "history": [
         // unix_timestamp, pwd_entry_name, changed_key, changed_value
