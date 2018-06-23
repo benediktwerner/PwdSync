@@ -47,6 +47,7 @@ class Password:
         self.name = json_obj["name"]
         self.username = json_obj["username"]
         self.password = json_obj["password"]
+        self.password2 = json_obj.get("password2", None)
         self.comment = json_obj.get("comment", None)
 
     def __str__(self):
