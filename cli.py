@@ -70,8 +70,6 @@ def copy_pwd(*pwd):
 
 
 class CommandParser:
-    MULTIPLE = object()
-
     def __init__(self):
         self.commands = {}
         self.add_command(
@@ -171,7 +169,7 @@ class CommandParser:
 
 
 def main():
-    terminal.ascii_art()
+    terminal.logo()
     load_data()
 
     parser = CommandParser()

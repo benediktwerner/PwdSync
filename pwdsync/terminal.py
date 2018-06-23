@@ -55,8 +55,8 @@ def colorize(text, color=None):
 #                       4$P"   /____/
 #                      z$"
 #                     z"
-def ascii_art():
-    ascii_art_string = r"""
+def logo():
+    logo_string = r"""
                        {yellow}.$$$$$"{endc}
                       {yellow}z$$$$$"{endc}
       ____           {yellow}z$$${underline}$${endc}_____
@@ -68,7 +68,7 @@ def ascii_art():
                      {yellow}z$"{endc}
                     {yellow}z"{endc}
 """
-    print(colorize(ascii_art_string))
+    print(colorize(logo_string))
 
 
 def erase_lines(count=1):
