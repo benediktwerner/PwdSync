@@ -116,5 +116,12 @@ class Storage:
         self.history.append(("ADD", "/".join(categories), pwd.name, pwd))
         self.get_pwds(*categories, create=True)[pwd.name] = pwd
 
+    def edit_pwd(self, key, value, *pwd_path):
+        pwd = self.get_pwd(*pwd_path)
+        if not hasattr(pwd, key):
+            raise KeyError("Invalid key")
+        self.history.append(("EDIT", "/".join(pwd_path[:-1]), pwd.name, key, value))
+        setattr(pwd, key, value)
+
 
 storage = Storage()

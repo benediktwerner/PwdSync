@@ -31,7 +31,7 @@ def save_data():
     terminal.success("Saved passwords to **{}**".format(filepath))
 
 
-def show_pwd(*pwd):
+def flash_pwd(*pwd):
     pwd = storage.get_pwd(*pwd)
     if pwd is None:
         terminal.error("No such password")
@@ -95,6 +95,46 @@ def add_pwd():
     print()
     if terminal.ask_yes_no("Do you want to save?"):
         save_data()
+
+
+def show_pwd(*pwd):
+    pwd = storage.get_pwd(*pwd)
+    terminal.respond(pwd.name)
+    terminal.respond("Username: {}".format(pwd.username))
+    terminal.respond("Password: [hidden]")
+    if pwd.password2:
+        terminal.respond("Password2: [hidden]")
+    terminal.respond("Comment: {}".format(pwd.comment))
+
+
+def edit_pwd(*pwd_path):
+    show_pwd(*pwd_path)
+    changes = False
+    while True:
+        print()
+        key = terminal.ask("Which field do you want to edit?")
+        if not key or key in ("back", "abort", "break"):
+            if changes and terminal.ask_yes_no("Do you want to save?"):
+                save_data()
+            return
+        if key in ("show", "view"):
+            print()
+            show_pwd(*pwd_path)
+            print()
+            continue
+        if key.startswith("password"):
+            value = terminal.ask_pwd("Enter new " + key + ":")
+        else:
+            value = terminal.ask("Enter new " + key + ":")
+        if not value:
+            if changes and terminal.ask_yes_no("Do you want to save?"):
+                save_data()
+            return
+        try:
+            storage.edit_pwd(key, value, *pwd_path)
+            changes = True
+        except KeyError:
+            terminal.error("Invalid field name: **{}**".format(key))
 
 
 class CommandParser:
@@ -181,11 +221,10 @@ class CommandParser:
             return
 
         *_, fun, min_count, max_count = self.commands[command]
-        if min_count <= len(args) <= max_count:
-            if fun is None:
-                terminal.error("**{}** is not yet implemented".format(command))
-            else:
-                fun(*args)
+        if fun is None:
+            terminal.error("**{}** is not yet implemented".format(command))
+        elif min_count <= len(args) <= max_count:
+            fun(*args)
         elif max_count == float("inf"):
             terminal.error("**{}** expects at least 1 argument but got {}.".format(command, len(args)))
         elif min_count == max_count:
@@ -203,11 +242,12 @@ def main():
     parser = CommandParser()
     parser.add_command("save", "Save the passwords to file", save_data)
     parser.add_command("sync", "Sync passwords to server")
-    parser.add_command("show", "Show the password", show_pwd, "*PWD")
+    parser.add_command(["pwd", "flash"], "Show the password", flash_pwd, "*PWD")
+    parser.add_command("show", "Show the password metadata", show_pwd, "*PWD")
     parser.add_command("list", "List all passwords. Optionally filter by category", list_passwords, "[*CATEGORIES]")
     parser.add_command("copy", "Copy the password to clipboard", copy_pwd, "*PWD")
     parser.add_command("add", "Add a new password", add_pwd)
-    parser.add_command("edit", "Edit an existing password")
+    parser.add_command("edit", "Edit an existing password", edit_pwd, "*PWD")
     parser.add_command(
         ["search", "grep"],
         "Search the password database",
@@ -222,6 +262,8 @@ def main():
 
     while True:
         command = terminal.ask("What do you want to do?")
+        if command is None:
+            terminal.goodbye()
         try:
             parser.parse_command(command)
         except Exception as e:
