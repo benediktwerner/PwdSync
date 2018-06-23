@@ -146,7 +146,7 @@ class CommandParser:
             elif len(possible_commands) > 1:
                 terminal.error("Multiple possible commands: {white}" + ", ".join(possible_commands))
             else:
-                terminal.error("Invalid command: **{}**. Use **help** to see all available commands.".format(repr(command)))
+                terminal.error("Invalid command: **{}**. Use **help** to see all available commands.".format(repr(cmd)))
         
         if command is None:
             print()
