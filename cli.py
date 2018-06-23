@@ -8,21 +8,11 @@ import pwdsync.clipboard as clipboard
 import pwdsync.exceptions as exceptions
 import pwdsync.terminal as terminal
 from pwdsync.config import config
-from pwdsync.storage import Password, storage
+from pwdsync.storage import Password, storage, Storage
 
 
 def load_data():
-    fail_count = 0
-    while True:
-        pwd = terminal.ask_pwd()
-        try:
-            storage.load_data(pwd)
-            break
-        except exceptions.WrongPasswordException:
-            terminal.error("Wrong password. Try again.")
-            fail_count += 1
-    if fail_count > 0:
-        print()
+    terminal.ask_pwd(storage.load_data)
 
 
 def save_data():
@@ -123,7 +113,7 @@ def edit_pwd(*pwd_path):
             print()
             continue
         if key.startswith("password"):
-            value = terminal.ask_pwd("Enter new " + key + ":")
+            value = terminal.get_pass("Enter new " + key + ":")
         else:
             value = terminal.ask("Enter new " + key + ":")
         if not value:
@@ -135,6 +125,12 @@ def edit_pwd(*pwd_path):
             changes = True
         except KeyError:
             terminal.error("Invalid field name: **{}**".format(key))
+
+
+def merge(path):
+    to_merge = Storage()
+    terminal.ask_pwd(lambda pwd: to_merge.load_data(pwd, path))
+    storage.merge(to_merge)
 
 
 class CommandParser:
@@ -242,6 +238,7 @@ def main():
     parser = CommandParser()
     parser.add_command("save", "Save the passwords to file", save_data)
     parser.add_command("sync", "Sync passwords to server")
+    parser.add_command("merge", "Merge another pwd database", merge, "FILE")
     parser.add_command(["pwd", "flash"], "Show the password", flash_pwd, "*PWD")
     parser.add_command("show", "Show the password metadata", show_pwd, "*PWD")
     parser.add_command("list", "List all passwords. Optionally filter by category", list_passwords, "[*CATEGORIES]")

@@ -6,6 +6,7 @@ import time
 from getpass import getpass
 
 import pwdsync.utils as utils
+import pwdsync.exceptions as exceptions
 from pwdsync.config import config
 
 
@@ -79,6 +80,7 @@ def goodbye():
     respond("Goodbye!\n", "yellow")
     exit(0)
 
+
 def ask_yes_no(text, default=True):
     result = ask(text.rstrip() + " (Y/n)" if default else " (y/N)")
     if not result:
@@ -86,6 +88,7 @@ def ask_yes_no(text, default=True):
     elif result.lower() in ("y", "j", "yes"):
         return True
     return False
+
 
 def ask(text):
     try:
@@ -102,7 +105,7 @@ def ask(text):
             return None
 
 
-def ask_pwd(text="Enter password:"):
+def get_pass(text="Enter password:"):
     try:
         # color codes don't work with input on windows
         print(" " * RESPONSE_INDENTATION + colorize("{orange}" + text.strip() + " {yellow}"), end="", flush=True)
@@ -113,6 +116,19 @@ def ask_pwd(text="Enter password:"):
     except (EOFError, KeyboardInterrupt):
         erase_lines()
         goodbye()
+
+
+def ask_pwd(check_func, text="Enter password:"):
+    fail_count = 0
+    while True:
+        pwd = get_pass(text)
+        try:
+            check_func(pwd)
+        except exceptions.WrongPasswordException:
+            error("Wrong password. Try again.")
+            fail_count += 1
+    if fail_count > 0:
+        print()
 
 
 def highlightify(text, color="blue", end_color="endc"):

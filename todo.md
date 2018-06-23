@@ -1,5 +1,5 @@
-- Edit pwds
-- sync pwds
+- sync
+- export
 - search pwds
 - history
 - GUI
