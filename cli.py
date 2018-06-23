@@ -2,6 +2,7 @@
 
 import traceback
 
+import pwdsync.crypto as crypto
 import pwdsync.utils as utils
 import pwdsync.clipboard as clipboard
 import pwdsync.exceptions as exceptions
@@ -67,6 +68,33 @@ def copy_pwd(*pwd):
         terminal.error("No such password")
     except exceptions.NoClipboardException:
         terminal.error("Copying to clipboard is not supported. Have you installed **pyperclip**?")
+
+
+def add_pwd():
+    name = terminal.ask("Name:")
+    categories = terminal.ask("Categories:").split(" ")
+    pwd_id = categories + [name]
+    if storage.get_pwd(*pwd_id):
+        terminal.error("A password with the same name and category already exists!")
+        return
+
+    username = terminal.ask("Username:")
+    password = terminal.ask("Password:")
+    password2 = terminal.ask("Password2:")
+    comment = terminal.ask("Comment:")
+
+    if not password:
+        password = crypto.gen_pwd()
+    if not password2:
+        password2 = None
+    if not comment:
+        comment = None
+    pwd = Password(name, username, password, password2, comment)
+    storage.add_pwd(pwd, *categories)
+
+    print()
+    if terminal.ask_yes_no("Do you want to save?"):
+        save_data()
 
 
 class CommandParser:
@@ -147,7 +175,7 @@ class CommandParser:
                 terminal.error("Multiple possible commands: {white}" + ", ".join(possible_commands))
             else:
                 terminal.error("Invalid command: **{}**. Use **help** to see all available commands.".format(repr(cmd)))
-        
+
         if command is None:
             print()
             return
@@ -178,7 +206,7 @@ def main():
     parser.add_command("show", "Show the password", show_pwd, "*PWD")
     parser.add_command("list", "List all passwords. Optionally filter by category", list_passwords, "[*CATEGORIES]")
     parser.add_command("copy", "Copy the password to clipboard", copy_pwd, "*PWD")
-    parser.add_command("add", "Add a new password")
+    parser.add_command("add", "Add a new password", add_pwd)
     parser.add_command("edit", "Edit an existing password")
     parser.add_command(
         ["search", "grep"],

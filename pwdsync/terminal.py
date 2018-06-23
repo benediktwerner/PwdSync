@@ -79,6 +79,13 @@ def goodbye():
     respond("Goodbye!\n", "yellow")
     exit(0)
 
+def ask_yes_no(text, default=True):
+    result = ask(text.rstrip() + " (Y/n)" if default else " (y/N)")
+    if not result:
+        return default
+    elif result.lower() in ("y", "j", "yes"):
+        return True
+    return False
 
 def ask(text):
     try:

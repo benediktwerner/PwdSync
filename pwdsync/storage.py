@@ -18,7 +18,7 @@ def load_encrypted_data():
 
 def json_object_hook(dct):
     if "password" in dct:
-        return Password(dct)
+        return Password.from_json(dct)
     return dct
 
 
@@ -39,16 +39,25 @@ def to_json(data):
 
 
 class Password:
-    def __init__(self, json_obj):
+    def __init__(self, name, username, password, password2=None, comment=None):
+        self.name = name
+        self.username = username
+        self.password = password
+        self.password2 = password2
+        self.comment = comment
+
+    @staticmethod
+    def from_json(json_obj):
         for key in ("name", "username", "password"):
             if key not in json_obj:
                 raise ValueError("{} not specified".format(key))
 
-        self.name = json_obj["name"]
-        self.username = json_obj["username"]
-        self.password = json_obj["password"]
-        self.password2 = json_obj.get("password2", None)
-        self.comment = json_obj.get("comment", None)
+        return Password(
+            json_obj["name"],
+            json_obj["username"],
+            json_obj["password"],
+            json_obj.get("password2", None),
+            json_obj.get("comment", None))
 
     def __str__(self):
         return "{}\t\t{}".format(self.name, self.username)
@@ -57,13 +66,18 @@ class Password:
 class Storage:
     def __init__(self):
         self.pwd = None
-        self.data = None
+        self.history = []
+        self.passwords = {}
 
     def save_data(self, filepath):
         if not self.pwd:
             raise Exception("No password")
 
-        encrypted = crypto.encrypt(to_json(self.data), self.pwd)
+        data = {
+            "history": self.history,
+            "passwords": self.passwords
+        }
+        encrypted = crypto.encrypt(to_json(data), self.pwd)
         with open(filepath, "w") as f:
             f.write(encrypted)
 
@@ -72,15 +86,14 @@ class Storage:
         encrypted = load_encrypted_data()
         if encrypted:
             decrypted = crypto.decrypt(encrypted, self.pwd)
-            self.data = from_json(decrypted)
+            data = from_json(decrypted)
         elif config.test:
             with open("test_data.json") as f:
-                self.data = json.load(f, object_hook=json_object_hook)
+                data = json.load(f, object_hook=json_object_hook)
         else:
-            self.data = {
-                "history": [],
-                "passwords": {}
-            }
+            return
+        self.history = data["history"]
+        self.passwords = data["passwords"]
 
     def get_pwd(self, *pwd):
         pwd = self.get_pwds(*pwd[:-1]).get(pwd[-1])
@@ -88,13 +101,20 @@ class Storage:
             return pwd
         return None
 
-    def get_pwds(self, *categories):
-        pwds = self.data["passwords"]
+    def get_pwds(self, *categories, create=False):
+        pwds = self.passwords
         for key in categories:
             if key not in pwds or isinstance(pwds[key], Password):
-                return {}
+                if create:
+                    pwds[key] = {}
+                else:
+                    return {}
             pwds = pwds[key]
         return pwds
+
+    def add_pwd(self, pwd, *categories):
+        self.history.append(("ADD", "/".join(categories), pwd.name, pwd))
+        self.get_pwds(*categories, create=True)[pwd.name] = pwd
 
 
 storage = Storage()

@@ -1,4 +1,3 @@
-- Add pwds
 - Edit pwds
 - sync pwds
 - search pwds

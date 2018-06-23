@@ -1,7 +1,9 @@
 import base64
 import hashlib
+import string
 
 import Cryptodome.Random
+from Cryptodome.Random.random import choice as random_choice
 from Cryptodome.Cipher import AES
 
 from pwdsync.exceptions import WrongPasswordException
@@ -11,11 +13,19 @@ NONCE_SIZE = 16
 MAC_TAG_SIZE = 16
 KEY_GEN_ITERATIONS = 1000
 
+PASSWORD_ALPHABET = string.ascii_letters + string.digits + string.punctuation
 
 def sha256(text):
     if isinstance(text, str):
         text = text.encode()
     return hashlib.sha256(text).digest()
+
+
+def gen_pwd(length=20):
+    password = ""
+    for _ in range(length):
+        password += random_choice(PASSWORD_ALPHABET)
+    return password
 
 
 def gen_key(pwd, salt):

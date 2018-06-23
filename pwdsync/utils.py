@@ -2,7 +2,7 @@ import os
 import platform
 from pathlib import Path
 
-import pwdsync.exceptions as exceptions
+import pwdsync.exceptions
 from pwdsync.cache import cached
 
 
@@ -33,7 +33,7 @@ def get_pwdsync_dir():
     elif is_linux():
         path = os.path.join(get_user_home(), ".pwdsync")
     else:
-        raise exceptions.UnsupportedOSException()
+        raise pwdsync.exceptions.UnsupportedOSException()
 
     if not os.path.isdir(path):
         os.makedirs(path, exist_ok=True)
