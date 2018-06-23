@@ -50,7 +50,7 @@ def colorize(text, color=None):
 #       ____           z$$$$$_____
 #      / __ \_      __d$$$/ / ___/__  ______  _____
 #     / /_/ / | /| / / __  /\__ \/ / / / __ \/ ___/
-#    / ____/| |/ |/ / /_/ /$$_/ / /_/ / / / / /__
+#    / ____/| |/ |/ / /_/ /$$$/ / /_/ / / / / /__
 #   /_/     |__/|__/\____//____/\__  /_/ /_/\___/
 #                       4$P"   /____/
 #                      z$"
@@ -97,9 +97,9 @@ def ask(text):
     except (EOFError, KeyboardInterrupt):
         try:
             print(colorize("{endc}\n"))
-            goodbye()
+            return None
         except KeyboardInterrupt:
-            goodbye()
+            return None
 
 
 def ask_pwd(text="Enter password:"):
