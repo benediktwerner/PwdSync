@@ -7,9 +7,9 @@ from Cryptodome.Cipher import AES
 from pwdsync.exceptions import WrongPasswordException
 
 SALT_SIZE = 16
-KEY_GEN_ITERATIONS = 20
-AES_MULTIPLE = 16
-DATA_PREFIX = "[ENCRYPTED_PWDSYNC_DATA]"
+NONCE_SIZE = 16
+MAC_TAG_SIZE = 16
+KEY_GEN_ITERATIONS = 1000
 
 
 def sha256(text):
@@ -27,30 +27,34 @@ def gen_key(pwd, salt):
     return key
 
 
-def pad(text):
-    to_pad = AES_MULTIPLE - (len(text) % AES_MULTIPLE)
-    return text + to_pad * chr(to_pad)
-
-
-def unpad(text):
-    pad = ord(text[-1])
-    return text[:-pad]
-
-
 def encrypt(text, pwd):
-    text = DATA_PREFIX + text
     salt = Cryptodome.Random.get_random_bytes(SALT_SIZE)
-    cipher = AES.new(gen_key(pwd, salt), AES.MODE_ECB)
-    ciphertext = cipher.encrypt(pad(text).encode())
-    return base64.b64encode(salt + ciphertext).decode()
+    key = gen_key(pwd, salt)
+    cipher = AES.new(key, AES.MODE_EAX)
+
+    ciphertext, tag = cipher.encrypt_and_digest(text.encode())
+    nonce = cipher.nonce
+
+    return base64.b64encode(salt + nonce + tag + ciphertext).decode()
 
 
 def decrypt(text, pwd):
     text = base64.b64decode(text)
-    salt = text[0:SALT_SIZE]
-    cipher = AES.new(gen_key(pwd, salt), AES.MODE_ECB)
-    decrypted = cipher.decrypt(text[SALT_SIZE:])
-    if not decrypted.startswith(DATA_PREFIX.encode()):
+    salt = text[:SALT_SIZE]
+    text = text[SALT_SIZE:]
+
+    nonce = text[:NONCE_SIZE]
+    text = text[NONCE_SIZE:]
+
+    tag = text[:MAC_TAG_SIZE]
+    text = text[MAC_TAG_SIZE:]
+
+    key = gen_key(pwd, salt)
+    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+
+    try:
+        decrypted = cipher.decrypt_and_verify(text, tag)
+    except ValueError:
         raise WrongPasswordException()
-    decrypted = decrypted[len(DATA_PREFIX):]
-    return unpad(decrypted.decode())
+
+    return decrypted.decode()
