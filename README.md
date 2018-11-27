@@ -1,5 +1,7 @@
 # PwdSync
-Simple Password Manager with a cross platform command line interface and a UI for Windows that supports syncing passwords between multiple devices.
+Simple Password Manager with a cross platform command line interface.
+
+It's still under development.
 
 ## Config file
 PwdSync can be configured using the config file located at `~/.pwdsync/config.yml` on Linux or `%HOMEPATH%\Documents\pwdsync\config.yml` on Windows.
