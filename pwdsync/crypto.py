@@ -5,13 +5,14 @@ import string
 import Cryptodome.Random
 from Cryptodome.Random.random import choice as random_choice
 from Cryptodome.Cipher import AES
+from Cryptodome.Protocol.KDF import scrypt
 
 from pwdsync.exceptions import WrongPasswordException
 
 SALT_SIZE = 16
 NONCE_SIZE = 16
 MAC_TAG_SIZE = 16
-KEY_GEN_ITERATIONS = 1000
+KEY_LENGTH = 32
 
 PASSWORD_ALPHABET = string.ascii_letters + string.digits + string.punctuation
 
@@ -31,10 +32,7 @@ def gen_pwd(length=20):
 def gen_key(pwd, salt):
     if isinstance(pwd, str):
         pwd = pwd.encode()
-    key = pwd + salt
-    for _ in range(KEY_GEN_ITERATIONS):
-        key = sha256(key)
-    return key
+    return scrypt(pwd, salt, KEY_LENGTH, 524288, 8, 1)
 
 
 def encrypt(text, pwd):
@@ -43,9 +41,7 @@ def encrypt(text, pwd):
     cipher = AES.new(key, AES.MODE_EAX)
 
     ciphertext, tag = cipher.encrypt_and_digest(text.encode())
-    nonce = cipher.nonce
-
-    return base64.b64encode(salt + nonce + tag + ciphertext).decode()
+    return base64.b64encode(salt + cipher.nonce + tag + ciphertext).decode()
 
 
 def decrypt(text, pwd):
