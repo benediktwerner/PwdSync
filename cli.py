@@ -16,9 +16,8 @@ def load_data():
 
 
 def save_data():
-    filepath = utils.get_pwdsync_file(config.password_file_path)
-    storage.save_data(filepath)
-    terminal.success("Saved passwords to **{}**".format(filepath))
+    storage.save_data()
+    terminal.success("Passwords saved")
 
 
 def flash_pwd(*pwd):
@@ -30,7 +29,7 @@ def flash_pwd(*pwd):
 
 
 def list_passwords(*categories):
-    pwds = storage.get_pwds(*categories)
+    pwds = storage.get_category(*categories)
     print_recursively(pwds)
 
 
@@ -100,31 +99,34 @@ def show_pwd(*pwd):
 def edit_pwd(*pwd_path):
     show_pwd(*pwd_path)
     changes = False
+
     while True:
         print()
-        key = terminal.ask("Which field do you want to edit?")
-        if not key or key in ("back", "abort", "break"):
-            if changes and terminal.ask_yes_no("Do you want to save?"):
-                save_data()
-            return
-        if key in ("show", "view"):
-            print()
-            show_pwd(*pwd_path)
-            print()
-            continue
+        key = terminal.ask("Which field do you want to edit? (Press Enter to exit)")
+        if not key:
+            break
+
         if key.startswith("password"):
             value = terminal.get_pass("Enter new " + key + ":")
         else:
             value = terminal.ask("Enter new " + key + ":")
-        if not value:
-            if changes and terminal.ask_yes_no("Do you want to save?"):
-                save_data()
-            return
+
         try:
             storage.edit_pwd(key, value, *pwd_path)
             changes = True
+
+            if key.startswith("password"):
+                if not value:
+                    terminal.success("Removed " + key)
+                else:
+                    terminal.success("Changed " + key)
+            else:
+                terminal.success("Changed **{}** to '**{}**'".format(key, value))
         except KeyError:
             terminal.error("Invalid field name: **{}**".format(key))
+
+    if changes and terminal.ask_yes_no("Do you want to save?"):
+        save_data()
 
 
 def merge(path):

@@ -17,8 +17,8 @@ KEY_LENGTH = 32
 PASSWORD_ALPHABET = string.ascii_letters + string.digits + string.punctuation
 
 def sha256(text):
-    if isinstance(text, str):
-        text = text.encode()
+    if not isinstance(text, bytes):
+        text = str(text).encode()
     return hashlib.sha256(text).digest()
 
 
@@ -30,8 +30,8 @@ def gen_pwd(length=20):
 
 
 def gen_key(pwd, salt):
-    if isinstance(pwd, str):
-        pwd = pwd.encode()
+    if not isinstance(pwd, bytes):
+        pwd = str(pwd).encode()
     return scrypt(pwd, salt, KEY_LENGTH, 524288, 8, 1)
 
 

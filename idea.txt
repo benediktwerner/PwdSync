@@ -1,0 +1,5 @@
+1. Rewrite in Go/Rust/C++ or something like that
+2. Client<->Server data exchange:
+    1. Client: Send hash of pwd + something
+    2. Server: Verify hash. If correct send encrypted pwd data
+    3. Client: Use pwd to decrypt data
